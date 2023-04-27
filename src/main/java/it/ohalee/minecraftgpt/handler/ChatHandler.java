@@ -28,9 +28,15 @@ public class ChatHandler implements Listener {
             return;
         }
 
-        Collection<Player> recipients = switch (Main.USER_TYPE.asMap().getOrDefault(player, hasFull ? Type.FULL : Type.SINGLE)) {
-            case SINGLE -> Collections.singletonList(player);
-            case FULL, BROADCAST -> e.getRecipients();
+        Collection<Player> recipients = null;
+        switch (Main.USER_TYPE.asMap().getOrDefault(player, hasFull ? Type.FULL : Type.SINGLE)) {
+            case SINGLE:
+                recipients = Collections.singletonList(player);
+                break;
+            case FULL:
+            case BROADCAST:
+                recipients = e.getRecipients();
+                break;
         };
 
         List<String> list = plugin.getConfig().getStringList("format");
@@ -44,13 +50,14 @@ public class ChatHandler implements Listener {
         StringBuilder builder = Main.CACHE.getIfPresent(player);
         if (builder == null) builder = new StringBuilder();
 
+        Collection<Player> finalRecipients = recipients;
         OpenAI.getResponse(plugin.getConfig().getConfigurationSection("chatgpt"), builder, e.getMessage()).whenComplete((response, throwable) -> {
             if (throwable != null) {
                 throwable.printStackTrace();
                 player.sendMessage(Messages.format(plugin.getConfig().getString("command.error")));
                 return;
             }
-            sendMessage(format(list.get(1), response, player.getName()), recipients);
+            sendMessage(format(list.get(1), response, player.getName()), finalRecipients);
         });
     }
 

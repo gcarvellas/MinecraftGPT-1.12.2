@@ -15,6 +15,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class ChatCommand implements TabExecutor {
@@ -29,10 +31,16 @@ public class ChatCommand implements TabExecutor {
             return true;
         }
 
-        if (!(sender instanceof Player player)) {
+        Optional<Player> optionalPlayer = Optional.of(sender)
+                .filter(Player.class::isInstance)
+                .map(Player.class::cast);
+
+        if (!optionalPlayer.isPresent()) {
             sender.sendMessage(ChatColor.RED + "Only players can use this command!");
-            return true;
         }
+
+        assert sender instanceof Player;
+        Player player = (Player) sender;
 
         Type type = Type.SINGLE;
         if (args.length >= 1) {
@@ -55,7 +63,9 @@ public class ChatCommand implements TabExecutor {
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return Arrays.stream(Type.values()).map(type -> type.name().toLowerCase()).toList();
+        return Arrays.stream(Type.values())
+                .map(type -> type.name().toLowerCase())
+                .collect(Collectors.toList());
     }
 
 

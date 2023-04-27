@@ -16,6 +16,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class Main extends JavaPlugin {
@@ -27,11 +28,16 @@ public class Main extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
-        OpenAI.init(getConfig().getString("API_KEY")).exceptionallyAsync(throwable -> {
-            getLogger().severe("Error while initializing OpenAI service! Is your API key valid?");
-            throwable.printStackTrace();
-            return null;
-        });
+        CompletableFuture.supplyAsync(() -> OpenAI.init(getConfig().getString("API_KEY")))
+                .exceptionally(throwable -> {
+                    getLogger().severe("Error while initializing OpenAI service! Is your API key valid?");
+                    throwable.printStackTrace();
+                    return null;
+                })
+                .thenApplyAsync(result -> {
+                    // Do something with the result
+                    return result;
+                });
 
         CACHE = CacheBuilder.newBuilder()
                 .expireAfterWrite(30, TimeUnit.MINUTES)

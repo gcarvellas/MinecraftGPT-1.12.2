@@ -1,5 +1,6 @@
 package it.ohalee.minecraftgpt;
 
+import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.service.OpenAiService;
@@ -8,6 +9,7 @@ import retrofit2.HttpException;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class OpenAI {
@@ -55,13 +57,23 @@ public class OpenAI {
                     .getChoices().get(0).getText();
 
         }).exceptionally(throwable -> {
-            if (throwable.getCause() instanceof HttpException e) {
-                String reason = switch (e.response().code()) {
-                    case 401 -> "Invalid API key! Please check your configuration.";
-                    case 429 -> "Too many requests! Please wait a few seconds and try again.";
-                    case 500 -> "OpenAI service is currently unavailable. Please try again later.";
-                    default -> "Unknown error! Please try again later. If this error persists, contact the plugin developer.";
-                };
+            OpenAiHttpException e = (OpenAiHttpException) throwable.getCause();
+            if (e != null){
+                String reason;
+                switch (e.statusCode) {
+                    case 401:
+                        reason = "Invalid API key! Please check your configuration.";
+                        break;
+                    case 429:
+                        reason = "Too many requests! Please wait a few seconds and try again.";
+                        break;
+                    case 500:
+                        reason = "OpenAI service is currently unavailable. Please try again later.";
+                        break;
+                    default:
+                        reason = "Unknown error! Please try again later. If this error persists, contact the plugin developer.";
+                        break;
+                }
                 throw new RuntimeException(reason, throwable);
             }
             throw new RuntimeException(throwable);

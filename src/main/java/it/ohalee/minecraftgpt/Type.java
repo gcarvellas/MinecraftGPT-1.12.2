@@ -7,12 +7,16 @@ public enum Type {
     FULL;
 
     public static Type getType(String type) {
-        return switch (type.toLowerCase()) {
-            case "single" -> Type.SINGLE;
-            case "broadcast" -> Type.BROADCAST;
-            case "full" -> Type.FULL;
-            default -> null;
-        };
+        switch (type.toLowerCase()) {
+            case "single":
+                return Type.SINGLE;
+            case "broadcast":
+                return Type.BROADCAST;
+            case "full":
+                return Type.FULL;
+            default:
+                return null;
+        }
     }
 
 }
